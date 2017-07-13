@@ -1,0 +1,34 @@
+<ngx-charts-chart
+  [view]="[width, height]"
+  [showLegend]="false">
+  <svg:g  class="tree-graph chart">
+    <svg:g ngx-charts-tree-graph-nodes *ngFor="let node of nodes"
+      [colors]="colors"
+      [data]="data"
+      [dims]="dims"
+      [tooltipDisabled]="tooltipDisabled"
+      [tooltipTemplate]="tooltipTemplate"
+      [valueFormatting]="valueFormatting"
+      [labelFormatting]="labelFormatting"
+      [gradient]="gradient"
+      (select)="onNodeClick($event)"
+    />
+    <path class="node" [attr.transform]="transform">{{node}}</path>
+
+  </svg:g>
+
+    <svg:g ngx-charts-tree-graph-links *ngFor="let link of links"
+      [colors]="colors"
+      [data]="data"
+      [dims]="dims"
+      [tooltipDisabled]="tooltipDisabled"
+      [tooltipTemplate]="tooltipTemplate"
+      [valueFormatting]="valueFormatting"
+      [labelFormatting]="labelFormatting"
+      [gradient]="gradient"
+      (select)="onLinkClick($event)"
+    />
+
+    <path class="link" d="{{link}}"></path>
+  </svg:g>
+</ngx-charts-chart>
