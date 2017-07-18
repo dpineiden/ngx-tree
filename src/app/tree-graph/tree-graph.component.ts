@@ -51,8 +51,8 @@ export class TreeGraphComponent extends BaseChartComponent {
     svg: any;
     root: hierarchy;
     margin = [10, 10, 10, 10];
-    nodes: []
-    links: []
+    nodes = [];
+    links = [];
 
     collapse(d) {
         if (d.children) {
@@ -71,9 +71,34 @@ export class TreeGraphComponent extends BaseChartComponent {
     }
 
 
+
+    diagonal(s, d) {
+        var path = null
+        if (d) {
+            path = `M ${s.y} ${s.x}
+            C ${(s.y + d.y) / 2} ${s.x},
+              ${(s.y + d.y) / 2} ${d.x},
+              ${d.y} ${d.x}`
+        }
+        return path
+    }
+
+    // Toggle children on click.
+    click(d) {
+        if (d.children) {
+            d._children = d.children;
+            d.children = null;
+        } else {
+            d.children = d._children;
+            d._children = null;
+        }
+        this.update();
+    }
+
     update(): void {
 
         var i = 0;
+        var duration = 750;
 
         super.update();
 
@@ -121,6 +146,99 @@ export class TreeGraphComponent extends BaseChartComponent {
 
         // put circle on every node
 
+        nodeEnter.append('circle')
+            .attr('class', 'node')
+            .attr('r', 10)
+            .style('fill', function(d) {
+                return d._children ? "lightsteelblue" : "#fff"
+            });
+
+        // put label on every node
+
+        nodeEnter.append('text')
+            .attr('dy', '.35m')
+            .attr('x', function(d) {
+                return d.children || d._children ? -13 : 13;
+            })
+            .attr('text-anchor', function(d) {
+                return d.children || d._children ? 'end' : 'start'
+            })
+            .text(function(d) { return d.data.name })
+
+
+        //  set transition --> TOD angular transition
+
+        var nodeUpdate = nodeEnter.merge(node)
+
+        // set transition
+        nodeUpdate.transition()
+            .duration(duration)
+            .attr('transform', function(d) {
+                return "translate(" + d.y + "," + d.x + ")";
+            })
+
+        nodeUpdate.select('circle.node')
+            .attr('r', 10)
+            .attr('fill', function(d) {
+                return d._children ? 'lightsteelblue' : "#fff";
+            })
+            .attr('cursor', 'pointer')
+
+        var nodeExit = node.exit().transition()
+            .duration(duration)
+            .attr('transform', function(d) {
+                return "translate(" + source.y + "," + source.x + ")"
+            })
+            .remove()
+
+        nodeExit.select('circle')
+            .attr('r', 1e-6)
+
+        nodeExit.select('text')
+            .style('fill-opacity', 1e-6)
+
+        // Update the links
+
+        var link = this.svg.selectAll('path.link')
+            .data(this.links, function(d) { return d.id });
+
+
+        // Enter any new links at the parent's previous position
+
+
+
+
+        var linkEnter = link.enter().insert('path', 'g')
+            .attr('class', 'link')
+            .attr('d', function(d) {
+                var o = { x: source.x0, y: source.y0 }
+                return this.diagonal(o, o)
+            })
+
+        // Update
+
+        var linkUpdate = linkEnter.merge(link)
+
+        // Transition back to the parent element position
+
+        linkUpdate.transtion()
+            .duration(duration)
+            .attr('d', function(d) { return this.diagonal(d, d.parent) })
+
+        // Remove exiting links
+
+        var linkExit = link.exit().transition()
+            .duration()
+            .attr('d', function(d) {
+                var o = { x: source.x, y: source.y }
+                return this.diagonal(o, o)
+            })
+            .remove();
+
+        this.nodes.forEach(function(d) {
+            d.x0 = d.x;
+            d.y0 = d.y;
+        })
 
 
         this.setColors();
