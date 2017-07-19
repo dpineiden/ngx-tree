@@ -15,7 +15,7 @@ import { Input } from '@angular/core';
 import { Output } from '@angular/core';
 
 import { tree, hierarchy } from 'd3-hierarchy';
-import { select, source } from 'd3';
+import { select } from 'd3';
 
 //import { BaseChartComponent } from '../common/base-chart.component';
 
@@ -45,7 +45,9 @@ export class TreeGraphComponent extends BaseChartComponent {
     @Input() labelFormatting: any;
     @Input() gradient: boolean = false;
     @Input() radius: number = 10;
-    @Output() select = new EventEmitter();
+
+    @Output() node_select = new EventEmitter();
+    @Output() link_select = new EventEmitter();
 
     @ContentChild('tooltipTemplate') tooltipTemplate: TemplateRef<any>;
 
@@ -64,6 +66,7 @@ export class TreeGraphComponent extends BaseChartComponent {
     kinds = ['simple', 'proportional'];
     kind: string;
     step = 120;
+    duration = 750;
 
     collapse(d) {
         if (d.children) {
@@ -98,29 +101,74 @@ export class TreeGraphComponent extends BaseChartComponent {
         }
     }
 
-    // Toggle children on click.
-    onNodeClick(d) {
-        if (d.children) {
-            d._children = d.children;
-            d.children = null;
-        } else {
-            d.children = d._children;
-            d._children = null;
+    // get position 0  and 1
+
+    getPositionList(source: Node, final: Node) {
+        var p0: Position = {
+            x: source.x,
+            y: source.y
         }
-        this.update();
+        var p1: Position = {
+            x: final.x,
+            y: final.y
+        }
+        return [p0, p1]
+    }
+
+
+
+    // Toggle children on click.
+    onNodeClick(node) {
+        // select transition movement duration by css id
+        var container = select("node_#${node.id}")
+
+        // check children groups
+        if (node.children) {
+            node._children = node.children;
+            node.children = null;
+        } else {
+            node.children = node._children;
+            node._children = null;
+        }
+        node.switchOpen()
+        this.draw_update(node);
+        // set transitio movement
+        container.transition().duration(this.duration)
+        if (node.children) {
+            node.children.forEach(ch_node => {
+                node.setTransform(
+                    "translate(" + ch_node.y + "," + ch_node.x + ")"
+                )
+            })
+        } else {
+            node.setTransform(
+                "translate(" + node.prev_y + "," + node.prev_x + ")"
+            )
+            node.setRadius(1e-6)
+            node.setStyle(1e-6)
+        }
+    }
+
+    onLinkClick(link) {
+        console.log(link)
+    }
+
+    setKind(kind: string) {
+        if (kind in this.kinds) {
+            this.kind = kind
+        }
+    }
+
+    styleNodeId(node) {
+        return "node_${node.id}"
     }
 
     update(): void {
+        this.draw_tree()
+    }
 
-        // update parent component chart
-        super.update();
-
-        this.kind = 'simple'
-
-        var i = 0;
-        var duration = 750;
-
-        this.svg = select('svg')
+    draw_tree() {
+        this.svg = select('ngx-charts-tree-graph svg')
 
         this.dims = calculateViewDimensions({
             width: this.width,
@@ -135,7 +183,19 @@ export class TreeGraphComponent extends BaseChartComponent {
 
         // define tree data:
 
-        this.data = this.tree_graph(this.root);
+        var root = this.data2tree(this.data)
+
+        var source = this.tree_graph(root);
+
+        this.draw_update(source)
+    }
+
+    draw_update(source): void {
+
+        // update parent component chart
+        super.update();
+
+        var i = 0;
 
         // generate nodes
 
@@ -164,39 +224,16 @@ export class TreeGraphComponent extends BaseChartComponent {
                 }
                 node.setNodePosition(node_position)
                 //transform
+                node.setChildren(element)
                 node.setTransform("translate(" + source.y0 + "," + source.x0 + ")")
+                node.switchOpen()
                 this.nodes.push(node)
+                var p0p1 = this.getPositionList(source, element)
+                var link_id = "${source.id}-${node.id}"
+                var link = new Link(link_id, p0p1)
+                this.links.push(link)
             })
         //foreach push to nodes
-
-
-        // get next 1 data node
-        this.data.slice(1).forEach(
-            element => {
-                var step = this.step
-                var node = new Node(element.id)
-                node.setRadius(this.getRadius(this.kind, this.radius, element.depth))
-                var text_position: Position = {
-                    x: element.children || element._children ? -1.1 : 1.1,
-                    y: 0.36
-                }
-                node.setTextPosition(text_position)
-                node.setNodeName(element.data.name)
-                node.setStyle(element._children ? "lightsteelblue" : "#fff")
-                node.setDepth(element.depth)
-                node.setHeight(element.height)
-                node.setTextAnchor(
-                    element.children || element._children ? 'end' : 'start')
-                //position
-                var node_position: Position = {
-                    x: element.x,
-                    y: element.depth * step
-                }
-                node.setNodePosition(node_position)
-                //transform
-                node.setTransform("translate(" + source.y0 + "," + source.x0 + ")")
-                this.last_nodes.push(node)
-            })
 
         // Normalize fixed deep
         // added typeof element
@@ -209,82 +246,9 @@ export class TreeGraphComponent extends BaseChartComponent {
         // al obtener id, se rescata el Node de la lista y se obtiene position source
         // se genera una animación translate de source a destiny
 
-        var nodeUpdate = nodeEnter.merge(node)
-
-        // set transition
-        nodeUpdate.transition()
-            .duration(duration)
-            .attr('transform', function(d) {
-                return "translate(" + d.y + "," + d.x + ")";
-            })
-
-        nodeUpdate.select('circle.node')
-            .attr('r', 10)
-            .attr('fill', function(d) {
-                return d._children ? 'lightsteelblue' : "#fff";
-            })
-            .attr('cursor', 'pointer')
-
-        var nodeExit = node.exit().transition()
-            .duration(duration)
-            .attr('transform', function(d) {
-                return "translate(" + source.y + "," + source.x + ")"
-            })
-            .remove()
-
-        nodeExit.select('circle')
-            .attr('r', 1e-6)
-
-        nodeExit.select('text')
-            .style('fill-opacity', 1e-6)
-
-        // Update the links
-
-        var link = this.svg.selectAll('path.link')
-            .data(this.links, function(d) { return d.id });
-
-
-        // Enter any new links at the parent's previous position
-
-
-
-
-        var linkEnter = link.enter().insert('path', 'g')
-            .attr('class', 'link')
-            .attr('d', function(d) {
-                var o = { x: source.x0, y: source.y0 }
-                return this.diagonal(o, o)
-            })
-
-        // Update
-
-        var linkUpdate = linkEnter.merge(link)
-
-        // Transition back to the parent element position
-
-        linkUpdate.transtion()
-            .duration(duration)
-            .attr('d', function(d) { return this.diagonal(d, d.parent) })
-
-        // Remove exiting links
-
-        var linkExit = link.exit().transition()
-            .duration()
-            .attr('d', function(d) {
-                var o = { x: source.x, y: source.y }
-                return this.diagonal(o, o)
-            })
-            .remove();
-
-        this.nodes.forEach(function(d) {
-            d.x0 = d.x;
-            d.y0 = d.y;
-        })
-
 
         this.setColors();
 
-        this.transform = `translate(${this.dims.xOffset} , ${this.margin[0]})`;
     }
 
     getDomain(): any[] {

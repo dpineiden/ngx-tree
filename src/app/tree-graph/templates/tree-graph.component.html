@@ -2,12 +2,12 @@
   [view]="[width, height]"
   [showLegend]="false">
 
-  <svg:g  class="tree-graph chart" [attr.transform]="transform">
-        <g ngx-charts-tree-graph-nodes *ngFor="let node of nodes"
-          (select)="onNodeClick($event)"/>
+  <svg:g xmlns="http://www.w3.org/2000/svg"  class="tree-graph chart" [attr.transform]="transform">
+
+    <g ngx-charts-tree-graph-nodes *ngFor="let node of nodes">
+      <g node [id]="styleNodeId(node)" (click)="onNodeClick(node)"/>
         <circle
           class="node"
-          [id]="node.id"
           [r]="node.radius"
           [cursor]="node.cursor"
           [style]="node.styles"
@@ -17,8 +17,10 @@
           [text-anchor]="node.text.anchor_node"
           [x]="node.text.x"
           [y]="node.text.y"
+          [style]="node.text.style"
         >{{node.name}}</text>
-      </g>
+    </g>
+    </g>
 
         <g ngx-charts-tree-graph-links *ngFor="let link of links"/>
         <path
@@ -26,7 +28,7 @@
           [d]="link"
           [stroke]="link.stroke"
           [fill]="link.fill"
-          (select)="onLinkClick($event)"> </path>
+          (click)="onLinkClick(link)"> </path>
         </g>
   </svg:g>
 
