@@ -23,6 +23,13 @@ import { BaseChartComponent } from '@swimlane/ngx-charts'
 import { calculateViewDimensions } from '@swimlane/ngx-charts';
 import { ColorHelper } from '@swimlane/ngx-charts';
 
+// import elements from tree
+
+import { Node } from './elements/node';
+import { Link } from './elements/link';
+import { Position } from './elements/position';
+//
+
 @Component({
     selector: 'ngx-charts-tree-graph',
     templateUrl: './templates/tree-graph.component.html',
@@ -51,8 +58,12 @@ export class TreeGraphComponent extends BaseChartComponent {
     svg: any;
     root: hierarchy;
     margin = [10, 10, 10, 10];
-    nodes = [];
-    links = [];
+    @Input() nodes: Node[] = [];
+    @Input() last_nodes: Node[] = [];
+    @Input() links: Link[] = [];
+    kinds = ['simple', 'proportional'];
+    kind: string;
+    step = 120;
 
     collapse(d) {
         if (d.children) {
@@ -71,20 +82,24 @@ export class TreeGraphComponent extends BaseChartComponent {
     }
 
 
-
-    diagonal(s, d) {
-        var path = null
-        if (d) {
-            path = `M ${s.y} ${s.x}
-            C ${(s.y + d.y) / 2} ${s.x},
-              ${(s.y + d.y) / 2} ${d.x},
-              ${d.y} ${d.x}`
+    getRadius(kind, radius: number, depth: number) {
+        if (kind in this.kinds) {
+            if (kind == 'simple') {
+                return radius
+            }
+            else if (kind = 'proportional') {
+                if (depth > 0) {
+                    return radius / depth
+                }
+                else {
+                    return radius
+                }
+            }
         }
-        return path
     }
 
     // Toggle children on click.
-    click(d) {
+    onNodeClick(d) {
         if (d.children) {
             d._children = d.children;
             d.children = null;
@@ -97,10 +112,13 @@ export class TreeGraphComponent extends BaseChartComponent {
 
     update(): void {
 
+        // update parent component chart
+        super.update();
+
+        this.kind = 'simple'
+
         var i = 0;
         var duration = 750;
-
-        super.update();
 
         this.svg = select('svg')
 
@@ -122,51 +140,74 @@ export class TreeGraphComponent extends BaseChartComponent {
         // generate nodes
 
         // decendants return an array 
-        this.nodes = this.data.descendants()
+
+        this.data.descendants().forEach(
+            element => {
+                var step = this.step
+                var node = new Node(element.id)
+                node.setRadius(this.getRadius(this.kind, this.radius, element.depth))
+                var text_position: Position = {
+                    x: element.children || element._children ? -1.1 : 1.1,
+                    y: 0.36
+                }
+                node.setTextPosition(text_position)
+                node.setNodeName(element.data.name)
+                node.setStyle(element._children ? "lightsteelblue" : "#fff")
+                node.setDepth(element.depth)
+                node.setHeight(element.height)
+                node.setTextAnchor(
+                    element.children || element._children ? 'end' : 'start')
+                //position
+                var node_position: Position = {
+                    x: element.x,
+                    y: element.depth * step
+                }
+                node.setNodePosition(node_position)
+                //transform
+                node.setTransform("translate(" + source.y0 + "," + source.x0 + ")")
+                this.nodes.push(node)
+            })
+        //foreach push to nodes
+
 
         // get next 1 data node
-        this.links = this.data.slice(1)
+        this.data.slice(1).forEach(
+            element => {
+                var step = this.step
+                var node = new Node(element.id)
+                node.setRadius(this.getRadius(this.kind, this.radius, element.depth))
+                var text_position: Position = {
+                    x: element.children || element._children ? -1.1 : 1.1,
+                    y: 0.36
+                }
+                node.setTextPosition(text_position)
+                node.setNodeName(element.data.name)
+                node.setStyle(element._children ? "lightsteelblue" : "#fff")
+                node.setDepth(element.depth)
+                node.setHeight(element.height)
+                node.setTextAnchor(
+                    element.children || element._children ? 'end' : 'start')
+                //position
+                var node_position: Position = {
+                    x: element.x,
+                    y: element.depth * step
+                }
+                node.setNodePosition(node_position)
+                //transform
+                node.setTransform("translate(" + source.y0 + "," + source.x0 + ")")
+                this.last_nodes.push(node)
+            })
 
         // Normalize fixed deep
         // added typeof element
 
-        this.nodes.forEach(function(d: any) { d.y = d.depth * 180; })
-
-        // Update the nodes:
-
-        var node = this.svg.selectAll('g.node')
-            .data(this.nodes, function(d) { return d.id || (d.id = ++i) })
-
-        // enter new nodes at parten's previous position
-        var nodeEnter = node.enter().append('g')
-            .attr('class', 'node')
-            .attr('transform', function(d)
-            { return "translate(" + source.y0 + "," + source.x0 + ")"; })
-            .attr('r', this.radius)
-
-        // put circle on every node
-
-        nodeEnter.append('circle')
-            .attr('class', 'node')
-            .attr('r', 10)
-            .style('fill', function(d) {
-                return d._children ? "lightsteelblue" : "#fff"
-            });
-
-        // put label on every node
-
-        nodeEnter.append('text')
-            .attr('dy', '.35m')
-            .attr('x', function(d) {
-                return d.children || d._children ? -13 : 13;
-            })
-            .attr('text-anchor', function(d) {
-                return d.children || d._children ? 'end' : 'start'
-            })
-            .text(function(d) { return d.data.name })
-
 
         //  set transition --> TOD angular transition
+
+        // Si selecciono un node, si tiene hijos ocultos, angular obtiene el id
+        // se crean nuevos nodos y se dibujan sobre el panel
+        // al obtener id, se rescata el Node de la lista y se obtiene position source
+        // se genera una animación translate de source a destiny
 
         var nodeUpdate = nodeEnter.merge(node)
 
