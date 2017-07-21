@@ -1,12 +1,14 @@
 import { NgModule } from '@angular/core';
-import { ChartCommonModule } from '../common/chart-common.module'
-
+import { ChartCommonModule } from '@swimlane/ngx-charts'
+import { TreeGraphComponent } from './tree-graph.component'
 
 @NgModule({
     imports: [ChartCommonModule],
     declarations: [
+        TreeGraphComponent
     ],
     exports: [
+        TreeGraphComponent
     ]
 })
 

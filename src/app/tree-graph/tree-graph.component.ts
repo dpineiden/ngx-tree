@@ -67,6 +67,7 @@ export class TreeGraphComponent extends BaseChartComponent {
     kind: string;
     step = 120;
     duration = 750;
+    text_position = [-1.1, 0.36]
 
     collapse(d) {
         if (d.children) {
@@ -164,7 +165,8 @@ export class TreeGraphComponent extends BaseChartComponent {
     }
 
     update(): void {
-        this.draw_tree()
+        this.draw_tree();
+        this.setColors();
     }
 
     draw_tree() {
@@ -207,8 +209,8 @@ export class TreeGraphComponent extends BaseChartComponent {
                 var node = new Node(element.id)
                 node.setRadius(this.getRadius(this.kind, this.radius, element.depth))
                 var text_position: Position = {
-                    x: element.children || element._children ? -1.1 : 1.1,
-                    y: 0.36
+                    x: element.children || element._children ? - text_position[0] : text_position[1],
+                    y: text_position[1]
                 }
                 node.setTextPosition(text_position)
                 node.setNodeName(element.data.name)
@@ -247,7 +249,7 @@ export class TreeGraphComponent extends BaseChartComponent {
         // se genera una animación translate de source a destiny
 
 
-        this.setColors();
+
 
     }
 
