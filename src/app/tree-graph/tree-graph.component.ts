@@ -201,7 +201,7 @@ export class TreeGraphComponent extends BaseChartComponent {
 
         // decendants return an array 
 
-        this.data.descendants().forEach(
+        source.descendants().forEach(
             element => {
                 var step = this.step
                 var node = new Node(element.id)
