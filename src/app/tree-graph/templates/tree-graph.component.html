@@ -1,35 +1,35 @@
 <ngx-charts-chart
   [view]="[width, height]"
-  [showLegend]="false">
+  [showLegend]="legend"
+  [legendOptions]="legendOptions"
+  [activeEntries]="activeEntries">
+  <svg:g id="nodes" *ngFor="let node of nodes" >
+    <svg:g class="node" [id]="styleNodeId(node)" [attr.transform]="transform" (click)="onNodeClick(node)">
+      <circle
+        class="figure"
+        [r]="node.radius"
+        [cursor]="node.cursor"
+        [style]="node.styles"
+        [transform]="node.transform"
+      ></circle>
+      <text
+        class="text"
+        [text-anchor]="node.text.anchor_node"
+        [x]="node.text.x"
+        [y]="node.text.y"
+        [style]="node.text.style">
+        {{node.name}}</text>
+    </svg:g>
+  </svg:g>   
 
-  <svg:g xmlns="http://www.w3.org/2000/svg"  class="tree-graph chart" [attr.transform]="transform">
-
-    <g ngx-charts-tree-graph-nodes *ngFor="let node of nodes">
-      <g node [id]="styleNodeId(node)" (click)="onNodeClick(node)"/>
-        <circle
-          class="node"
-          [r]="node.radius"
-          [cursor]="node.cursor"
-          [style]="node.styles"
-          [transform]="node.transform"
-        ></circle>
-        <text
-          [text-anchor]="node.text.anchor_node"
-          [x]="node.text.x"
-          [y]="node.text.y"
-          [style]="node.text.style"
-        >{{node.name}}</text>
-    </g>
-    </g>
-
-        <g ngx-charts-tree-graph-links *ngFor="let link of links"/>
-        <path
-          class="link"
-          [d]="link"
-          [stroke]="link.stroke"
-          [fill]="link.fill"
-          (click)="onLinkClick(link)"> </path>
-        </g>
+  <svg:g id="paths" *ngFor="let link of links">
+    <path     
+      class="link"
+      [d]="link"
+      [stroke]="link.stroke"
+      [fill]="link.fill"
+      (click)="onLinkClick(link)"> </path>
   </svg:g>
+
 
 </ngx-charts-chart>

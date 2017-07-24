@@ -55,9 +55,11 @@ export class Node implements NodeInterface {
         this.x = 0;
         this.y = 0
         this.open = false;
-        this.text.anchor = "end";
-        this.text.x = "-1.1em";
-        this.text.y = "0.36em";
+        this.text = {
+            anchor: "end",
+            x: "-1.1em",
+            y: "0.36em",
+        }
     }
 
     setRadius(value: number) {
@@ -70,6 +72,7 @@ export class Node implements NodeInterface {
     }
 
     setTextPosition(p: Position) {
+        console.log("Text position")
         this.text.x = "${p.x}em";
         this.text.y = "${p.y}em";
     }

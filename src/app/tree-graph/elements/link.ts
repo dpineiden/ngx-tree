@@ -28,6 +28,7 @@ export class Link implements LinkInterface {
               ${(p0.y + p1.y) / 2} ${p1.x},
               ${p1.y} ${p1.x}`
         }
+        console.log(path)
         return path
     }
 

@@ -9,6 +9,15 @@ import {
     AfterViewInit
 } from '@angular/core';
 
+import {
+    trigger,
+    state,
+    style,
+    animate,
+    transition
+} from '@angular/animations';
+
+
 import { LocationStrategy } from '@angular/common';
 
 import { Input } from '@angular/core';
@@ -28,14 +37,25 @@ import { ColorHelper } from '@swimlane/ngx-charts';
 import { Node } from './elements/node';
 import { Link } from './elements/link';
 import { Position } from './elements/position';
-//
+
 
 @Component({
     selector: 'ngx-charts-tree-graph',
     templateUrl: './templates/tree-graph.component.html',
     styleUrls: ['./static/css/tree-graph.component.scss'],
     encapsulation: ViewEncapsulation.None,
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    animations: [
+        trigger('animationState', [
+            transition(':leave', [
+                style({
+                    opacity: 1,
+                    transform: '*',
+                }),
+                animate(500, style({ opacity: 0, transform: 'scale(0)' }))
+            ])
+        ])
+    ]
 })
 export class TreeGraphComponent extends BaseChartComponent {
 
@@ -50,13 +70,74 @@ export class TreeGraphComponent extends BaseChartComponent {
     @Output() link_select = new EventEmitter();
 
     @ContentChild('tooltipTemplate') tooltipTemplate: TemplateRef<any>;
+    data = {
+        'children': [
+            {
+                'children':
+                [
+                    {
+                        'children': ['g'],
+                        'name': 'f'
+                    },
+                    {
+                        'children': [],
+                        'name': 'h'
+                    }],
+                'name': 'e'
+            },
+            {
+                'children':
+                [
+                    {
+                        'children':
+                        [
+                            {
+                                'children':
+                                [
+                                    {
+                                        'children': [],
+                                        'name': 'l'
+                                    },
+                                    {
+                                        'children': [],
+                                        'name': 'm'
+                                    }],
+                                'name': 'k'
+                            }], 'name': 'j'
+                    }
+                ],
+                'name': 'i'
+            },
+            {
+                'children':
+                [
+                    {
+                        'children':
+                        [
+                            {
+                                'children': [],
+                                'name': 'c'
+                            },
+                            {
+                                'children': [],
+                                'name': 'd'
+                            }
+                        ],
+                        'name': 'b'
+                    }
+                ],
+                'name': 'a'
+            }
+        ],
+        'name': 'PIGRO'
+    }
+
 
     dims: any;
     domain: any;
     transform: any;
     colors: ColorHelper;
     tree_graph: any;
-    data: any;
     svg: any;
     root: hierarchy;
     margin = [10, 10, 10, 10];
@@ -68,21 +149,32 @@ export class TreeGraphComponent extends BaseChartComponent {
     step = 120;
     duration = 750;
     text_position = [-1.1, 0.36]
+    width = 800;
+    height = 400;
 
     collapse(d) {
-        if (d.children) {
-            d._children = d.children
-            d._children.forEach(this.collapse)
-            d.children = null
+        console.log("Collapse")
+        console.log(d)
+        if ('children' in d) {
+            if (d.children.length > 0) {
+                console.log("Inside collapse")
+                d._children = d.children
+                d._children.forEach(d => this.collapse(d))
+                d.children = null
+            }
         }
+        console.log("D collapsed")
+        console.log(d)
     }
 
     data2tree(data) {
-        this.root = hierarchy(data, function(d) { return d.chidren; });
-        this.root.x0 = this.height / 2
-        this.root.y0 = 0
-        this.root.children.forEach(this.collapse)
-        return this.root
+        var root = hierarchy(data, function(d) { return d.children; });
+        root.x0 = this.height / 2
+        root.y0 = 0
+        console.log("Root hierarchy")
+        console.log(root)
+        root.children.forEach(d => this.collapse(d))
+        return root
     }
 
 
@@ -161,16 +253,24 @@ export class TreeGraphComponent extends BaseChartComponent {
     }
 
     styleNodeId(node) {
-        return "node_${node.id}"
+        return node.id
     }
 
+
     update(): void {
+        console.log("Update")
+        super.update()
+        console.log("First update ok")
+
         this.draw_tree();
         this.setColors();
+
+        console.log("Draw tree ok")
     }
 
     draw_tree() {
-        this.svg = select('ngx-charts-tree-graph svg')
+        console.log("Selecting svg")
+        this.svg = select('svg')
 
         this.dims = calculateViewDimensions({
             width: this.width,
@@ -178,16 +278,30 @@ export class TreeGraphComponent extends BaseChartComponent {
             margins: this.margin
         });
 
+        console.log("Creating tree")
 
-        this.tree_graph = tree<any>()
+        console.log(this.dims)
+
+        this.tree_graph = tree()
             .size([this.dims.width, this.dims.height]);
 
 
         // define tree data:
 
+        console.log("Tree graph init")
+        console.log(this.tree_graph)
+
         var root = this.data2tree(this.data)
 
+        console.log("Parse root to tree graph")
+
+        console.log("Root")
+        console.log(root)
+
         var source = this.tree_graph(root);
+
+        console.log("Source ok")
+        console.log(source)
 
         this.draw_update(source)
     }
@@ -195,22 +309,30 @@ export class TreeGraphComponent extends BaseChartComponent {
     draw_update(source): void {
 
         // update parent component chart
-        super.update();
 
         var i = 0;
 
         // generate nodes
 
-        // decendants return an array 
+        // decendants return an array
+
+        console.log("Datawork")
+        console.log(source.descendants())
+
+        console.log("QUe paso?")
 
         source.descendants().forEach(
             element => {
+                console.log("Element")
+                console.log(element)
                 var step = this.step
                 var node = new Node(element.id)
                 node.setRadius(this.getRadius(this.kind, this.radius, element.depth))
+                console.log(node)
                 var text_position: Position = {
-                    x: element.children || element._children ? - text_position[0] : text_position[1],
-                    y: text_position[1]
+                    x: element.children || element._children ?
+                        -(this.text_position[0]) : this.text_position[1],
+                    y: this.text_position[1]
                 }
                 node.setTextPosition(text_position)
                 node.setNodeName(element.data.name)
@@ -234,21 +356,11 @@ export class TreeGraphComponent extends BaseChartComponent {
                 var link_id = "${source.id}-${node.id}"
                 var link = new Link(link_id, p0p1)
                 this.links.push(link)
+                console.log("Setup ok nodes and links")
+                console.log(this.nodes)
+                console.log(this.links)
             })
-        //foreach push to nodes
-
-        // Normalize fixed deep
-        // added typeof element
-
-
-        //  set transition --> TOD angular transition
-
-        // Si selecciono un node, si tiene hijos ocultos, angular obtiene el id
-        // se crean nuevos nodos y se dibujan sobre el panel
-        // al obtener id, se rescata el Node de la lista y se obtiene position source
-        // se genera una animación translate de source a destiny
-
-
+        console.log("Drawing tree")
 
 
     }
