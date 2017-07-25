@@ -1,4 +1,4 @@
-var tree_example = {
+export const tree_example = {
     'children': [
         {
             'children':

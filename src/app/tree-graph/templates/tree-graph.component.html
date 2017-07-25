@@ -3,33 +3,20 @@
   [showLegend]="legend"
   [legendOptions]="legendOptions"
   [activeEntries]="activeEntries">
-  <svg:g id="nodes" *ngFor="let node of nodes" >
-    <svg:g class="node" [id]="styleNodeId(node)" [attr.transform]="transform" (click)="onNodeClick(node)">
+
+  <svg:g id="nodes">
+    <svg:g class="node" id="styleNodeId(node)" [attr.transform]="transform" (click)="onNodeClick(node)">
       <circle
         class="figure"
-        [r]="node.radius"
-        [cursor]="node.cursor"
-        [style]="node.styles"
-        [transform]="node.transform"
+        r=15
+        cx=150
+        cy=100            
       ></circle>
       <text
-        class="text"
-        [text-anchor]="node.text.anchor_node"
-        [x]="node.text.x"
-        [y]="node.text.y"
-        [style]="node.text.style">
-        {{node.name}}</text>
+        class="text">
+        Node</text>
     </svg:g>
   </svg:g>   
 
-  <svg:g id="paths" *ngFor="let link of links">
-    <path     
-      class="link"
-      [d]="link"
-      [stroke]="link.stroke"
-      [fill]="link.fill"
-      (click)="onLinkClick(link)"> </path>
-  </svg:g>
-
-
+  
 </ngx-charts-chart>

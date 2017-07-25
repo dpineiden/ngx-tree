@@ -9,15 +9,6 @@ import {
     AfterViewInit
 } from '@angular/core';
 
-import {
-    trigger,
-    state,
-    style,
-    animate,
-    transition
-} from '@angular/animations';
-
-
 import { LocationStrategy } from '@angular/common';
 
 import { Input } from '@angular/core';
@@ -45,17 +36,6 @@ import { Position } from './elements/position';
     styleUrls: ['./static/css/tree-graph.component.scss'],
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    animations: [
-        trigger('animationState', [
-            transition(':leave', [
-                style({
-                    opacity: 1,
-                    transform: '*',
-                }),
-                animate(500, style({ opacity: 0, transform: 'scale(0)' }))
-            ])
-        ])
-    ]
 })
 export class TreeGraphComponent extends BaseChartComponent {
 
@@ -142,7 +122,6 @@ export class TreeGraphComponent extends BaseChartComponent {
     root: hierarchy;
     margin = [10, 10, 10, 10];
     @Input() nodes: Node[] = [];
-    @Input() last_nodes: Node[] = [];
     @Input() links: Link[] = [];
     kinds = ['simple', 'proportional'];
     kind: string;
@@ -213,7 +192,7 @@ export class TreeGraphComponent extends BaseChartComponent {
     // Toggle children on click.
     onNodeClick(node) {
         // select transition movement duration by css id
-        var container = select("node_#${node.id}")
+        var container = select(".node #" + node.id)
 
         // check children groups
         if (node.children) {
@@ -258,14 +237,9 @@ export class TreeGraphComponent extends BaseChartComponent {
 
 
     update(): void {
-        console.log("Update")
         super.update()
-        console.log("First update ok")
-
         this.draw_tree();
         this.setColors();
-
-        console.log("Draw tree ok")
     }
 
     draw_tree() {
@@ -306,7 +280,7 @@ export class TreeGraphComponent extends BaseChartComponent {
         this.draw_update(source)
     }
 
-    draw_update(source): void {
+    draw_update(source) {
 
         // update parent component chart
 
@@ -376,4 +350,5 @@ export class TreeGraphComponent extends BaseChartComponent {
     setColors(): void {
         this.colors = new ColorHelper(this.scheme, 'ordinal', this.domain, this.customColors);
     }
+
 }
