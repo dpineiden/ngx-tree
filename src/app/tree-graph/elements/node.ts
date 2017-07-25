@@ -18,8 +18,8 @@ interface NodeInterface {
     open: boolean;
     text?: {
         anchor: string,
-        x: string,
-        y: string,
+        x: number,
+        y: number,
         style?: string;
     }
 }
@@ -42,8 +42,8 @@ export class Node implements NodeInterface {
     open: boolean;
     text?: {
         anchor: string,
-        x: string,
-        y: string,
+        x: number,
+        y: number,
         style?: string;
     }
     constructor(id: number) {
@@ -57,8 +57,8 @@ export class Node implements NodeInterface {
         this.open = false;
         this.text = {
             anchor: "end",
-            x: "-1.1em",
-            y: "0.36em",
+            x: -1.1,
+            y: 0.36,
         }
     }
 
@@ -73,8 +73,8 @@ export class Node implements NodeInterface {
 
     setTextPosition(p: Position) {
         console.log("Text position")
-        this.text.x = "${p.x}em";
-        this.text.y = "${p.y}em";
+        this.text.x = p.x;
+        this.text.y = p.y;
     }
 
     setTextAnchor(value: string) {

@@ -15,15 +15,16 @@ import { tree_example } from './data'
 
 export class AppComponent implements OnInit {
     title = 'Tree Graph Component';
-    chart_name: string = 'ngx-charts-tree-graph';
+    chart_name: string = 'tree-graph';
     chart: any;
+    chartType: string
     chartGroups = [
         {
             name: 'Tree Graph',
             charts: [
                 {
                     name: 'Tree Graph Simple',
-                    selector: 'ngx-charts-tree-graph',
+                    selector: 'tree-graph',
                     options: [],
                     defaults: {}
                 }
@@ -33,22 +34,36 @@ export class AppComponent implements OnInit {
 
     constructor(public location: Location) {
         // load data to principal component
+        console.log("Constructor")
         Object.assign(this, { tree_example })
 
     }
 
     ngOnInit() {
+        console.log("Init Componente App")
         this.location.replaceState(this.chart_name)
+
+        console.log(this.chartGroups)
 
         for (const group of this.chartGroups) {
             this.chart = group.charts.find(x => x.selector === this.chart_name)
         }
 
+        console.log("Chart defined")
+
         // Copy all properties to destiny:
+
+        console.log(this.chart)
 
         Object.assign(this, this.chart.defaults)
 
         setInterval(this.updateData.bind(this), 1000)
+
+        console.log("Assign chart's type")
+
+        this.chartType = this.chart_name;
+
+        console.log("Init ok")
 
     }
 

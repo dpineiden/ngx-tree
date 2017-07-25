@@ -46,6 +46,7 @@ export class TreeGraphComponent extends BaseChartComponent {
     @Input() gradient: boolean = false;
     @Input() radius: number = 10;
 
+
     @Output() node_select = new EventEmitter();
     @Output() link_select = new EventEmitter();
 
@@ -130,6 +131,7 @@ export class TreeGraphComponent extends BaseChartComponent {
     text_position = [-1.1, 0.36]
     width = 800;
     height = 400;
+    draw: boolean = false;
 
     collapse(d) {
         console.log("Collapse")
@@ -336,6 +338,8 @@ export class TreeGraphComponent extends BaseChartComponent {
             })
         console.log("Drawing tree")
 
+
+        this.draw = true
 
     }
 

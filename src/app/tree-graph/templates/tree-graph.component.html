@@ -4,7 +4,7 @@
   [legendOptions]="legendOptions"
   [activeEntries]="activeEntries">
 
-  <svg:g id="nodes">
+  <svg:g id="nodes-1">
     <svg:g class="node" id="styleNodeId(node)" [attr.transform]="transform" (click)="onNodeClick(node)">
       <circle
         class="figure"
@@ -16,7 +16,35 @@
         class="text">
         Node</text>
     </svg:g>
-  </svg:g>   
+  </svg:g>
+  <svg:g *ngIf="draw==true">
+ <svg:g id="nodes" *ngFor="let node of nodes">
+   <svg:g class="node"
+     *ngIf="node"
+     [id]="styleNodeId(node)"
+     [attr.transform]="transform" (click)="onNodeClick(node)">
+     <circle class="figure"
+       [attr.r]="node.radius"
+       [attr.cursor]="node.cursor"
+       [attr.style]="node.styles"
+       [attr.transform]="node.transform"
+       [attr.cx]="node.x"
+       [attr.cy]="node.y">
+      </circle>
+      <text class="text"
+        [attr.text-anchor]="node.text.anchor_node"
+        [attr.x]="node.text.x"
+        [attr.y]="node.text.y"
+        [attr.style]="node.text.style">{{node.name}}</text>
+    </svg:g>
+    </svg:g>
+    <svg:g id="paths" *ngFor="let link of links">
+      <path class="link"
+        [attr.d]="link"
+        [attr.stroke]="link.stroke"
+        [attr.fill]="link.fill"
+        (click)="onLinkClick(link)"> </path>
+    </svg:g>
+  </svg:g>
 
-  
 </ngx-charts-chart>
