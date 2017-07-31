@@ -1,9 +1,11 @@
 <main>
   <h1>  {{title}}</h1>
-  {{chart.selector}}
+ <div id="selector"> {{chart.selector}}
+ </div>
+  <p></p>
   <ngx-charts-tree-graph
     *ngIf="chartType === 'tree-graph'"
-  ></ngx-charts-tree-graph>
+    [data]="data" ></ngx-charts-tree-graph>
 
   <div>Concorde</div>
 </main>

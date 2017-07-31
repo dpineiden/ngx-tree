@@ -23,10 +23,7 @@ export class Link implements LinkInterface {
     createLink(p0: Position, p1: Position) {
         var path = null
         if (p1) {
-            path = `M ${p0.y} ${p0.x}
-            C ${(p0.y + p1.y) / 2} ${p0.x},
-              ${(p0.y + p1.y) / 2} ${p1.x},
-              ${p1.y} ${p1.x}`
+            path = `M ${p0.y} ${p0.x} C ${(p0.y + p1.y) / 2} ${p0.x}, ${(p0.y + p1.y) / 2} ${p1.x}, ${p1.y} ${p1.x}`
         }
         console.log(path)
         return path

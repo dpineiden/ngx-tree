@@ -18,6 +18,11 @@ export class AppComponent implements OnInit {
     chart_name: string = 'tree-graph';
     chart: any;
     chartType: string
+    view: any[];
+    width: number = 1200;
+    height: number = 800;
+    data: {};
+
     chartGroups = [
         {
             name: 'Tree Graph',
@@ -36,7 +41,7 @@ export class AppComponent implements OnInit {
         // load data to principal component
         console.log("Constructor")
         Object.assign(this, { tree_example })
-
+        this.data = tree_example
     }
 
     ngOnInit() {
@@ -71,5 +76,10 @@ export class AppComponent implements OnInit {
         return {}
     }
 
+    applyDimensions() {
+        this.view = [this.width, this.height];
+    }
+
 
 }
+

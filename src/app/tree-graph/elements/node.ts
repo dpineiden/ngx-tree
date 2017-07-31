@@ -1,7 +1,7 @@
 import { Position } from './position'
 
 interface NodeInterface {
-    id: number,
+    id: string,
     radius: number,
     cursor: string,
     style: string,
@@ -13,8 +13,7 @@ interface NodeInterface {
     prev_x: number;
     prev_y: number;
     transform?: string;
-    children: Object;
-    _children: Object;
+    source: Node;
     open: boolean;
     text?: {
         anchor: string,
@@ -22,10 +21,11 @@ interface NodeInterface {
         y: number,
         style?: string;
     }
+
 }
 
-export class Node implements NodeInterface {
-    id: number;
+export class NodeD3 implements NodeInterface {
+    id: string;
     radius: number;
     cursor: string;
     style: string;
@@ -37,8 +37,7 @@ export class Node implements NodeInterface {
     prev_x: number;
     prev_y: number;
     transform?: string;
-    children: Object;
-    _children: Object;
+    source: Node;
     open: boolean;
     text?: {
         anchor: string,
@@ -46,7 +45,8 @@ export class Node implements NodeInterface {
         y: number,
         style?: string;
     }
-    constructor(id: number) {
+
+    constructor(id: string) {
         this.id = id;
         this.radius = 1e-6;
         this.cursor = "pointer";
@@ -63,6 +63,8 @@ export class Node implements NodeInterface {
     }
 
     setRadius(value: number) {
+        console.log("Radius set to")
+        console.log(value)
         this.radius = value;
     }
 
@@ -105,11 +107,6 @@ export class Node implements NodeInterface {
         this.transform = value
     }
 
-    setChildren(element) {
-        this.children = element.children;
-        this._children = element._children;
-    }
-
     setTextStyle(value: string) {
         this.text.style = value
     }
@@ -121,5 +118,13 @@ export class Node implements NodeInterface {
         else {
             this.open = true
         }
+    }
+
+    setSource(source: Node) {
+        this.source = source
+    }
+
+    getSource() {
+        return this.source
     }
 }

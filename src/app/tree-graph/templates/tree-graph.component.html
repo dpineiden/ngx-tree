@@ -2,26 +2,12 @@
   [view]="[width, height]"
   [showLegend]="legend"
   [legendOptions]="legendOptions"
-  [activeEntries]="activeEntries">
-
-  <svg:g id="nodes-1">
-    <svg:g class="node" id="styleNodeId(node)" [attr.transform]="transform" (click)="onNodeClick(node)">
-      <circle
-        class="figure"
-        r=15
-        cx=150
-        cy=100            
-      ></circle>
-      <text
-        class="text">
-        Node</text>
-    </svg:g>
-  </svg:g>
-  <svg:g *ngIf="draw==true">
+  [activeEntries]="activeEntries"
+  [data]="data">
+  <svg:g *ngIf="draw">
  <svg:g id="nodes" *ngFor="let node of nodes">
    <svg:g class="node"
-     *ngIf="node"
-     [id]="styleNodeId(node)"
+     [attr.id]="styleNodeId(node)"
      [attr.transform]="transform" (click)="onNodeClick(node)">
      <circle class="figure"
        [attr.r]="node.radius"
@@ -32,6 +18,7 @@
        [attr.cy]="node.y">
       </circle>
       <text class="text"
+        [attr.position]="relative"
         [attr.text-anchor]="node.text.anchor_node"
         [attr.x]="node.text.x"
         [attr.y]="node.text.y"
@@ -40,7 +27,8 @@
     </svg:g>
     <svg:g id="paths" *ngFor="let link of links">
       <path class="link"
-        [attr.d]="link"
+        [attr.id]="link.id"
+        [attr.d]="link.d"
         [attr.stroke]="link.stroke"
         [attr.fill]="link.fill"
         (click)="onLinkClick(link)"> </path>

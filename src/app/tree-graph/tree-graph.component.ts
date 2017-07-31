@@ -25,7 +25,7 @@ import { ColorHelper } from '@swimlane/ngx-charts';
 
 // import elements from tree
 
-import { Node } from './elements/node';
+import { NodeD3 } from './elements/node';
 import { Link } from './elements/link';
 import { Position } from './elements/position';
 
@@ -46,73 +46,12 @@ export class TreeGraphComponent extends BaseChartComponent {
     @Input() gradient: boolean = false;
     @Input() radius: number = 10;
 
+    @Input() data: Object;
 
     @Output() node_select = new EventEmitter();
     @Output() link_select = new EventEmitter();
 
     @ContentChild('tooltipTemplate') tooltipTemplate: TemplateRef<any>;
-    data = {
-        'children': [
-            {
-                'children':
-                [
-                    {
-                        'children': ['g'],
-                        'name': 'f'
-                    },
-                    {
-                        'children': [],
-                        'name': 'h'
-                    }],
-                'name': 'e'
-            },
-            {
-                'children':
-                [
-                    {
-                        'children':
-                        [
-                            {
-                                'children':
-                                [
-                                    {
-                                        'children': [],
-                                        'name': 'l'
-                                    },
-                                    {
-                                        'children': [],
-                                        'name': 'm'
-                                    }],
-                                'name': 'k'
-                            }], 'name': 'j'
-                    }
-                ],
-                'name': 'i'
-            },
-            {
-                'children':
-                [
-                    {
-                        'children':
-                        [
-                            {
-                                'children': [],
-                                'name': 'c'
-                            },
-                            {
-                                'children': [],
-                                'name': 'd'
-                            }
-                        ],
-                        'name': 'b'
-                    }
-                ],
-                'name': 'a'
-            }
-        ],
-        'name': 'PIGRO'
-    }
-
 
     dims: any;
     domain: any;
@@ -120,18 +59,93 @@ export class TreeGraphComponent extends BaseChartComponent {
     colors: ColorHelper;
     tree_graph: any;
     svg: any;
+    size: number[];
     root: hierarchy;
     margin = [10, 10, 10, 10];
-    @Input() nodes: Node[] = [];
+    padding = {
+        'top': 30,
+        'bottom': 30,
+        'left': 30,
+        'right': 30
+    }
+    @Input() nodes: NodeD3[] = [];
     @Input() links: Link[] = [];
     kinds = ['simple', 'proportional'];
-    kind: string;
+    kind: string = 'simple';
     step = 120;
     duration = 750;
     text_position = [-1.1, 0.36]
-    width = 800;
-    height = 400;
+    width = 1200;
+    height = 800;
     draw: boolean = false;
+    default_radius: number = 10;
+    i = 0;
+    idn = 4;
+    node_id_list = new Map();
+    // lolo = new Node();//https://developer.mozilla.org/es/docs/Web/API/Node
+    // Obtain a list from a to b
+
+
+    leaves: number = 0;
+    levels: number = 0;
+
+    step_x: number = 0;
+    step_y: number = 0;
+
+    list_levels = []
+
+    getSizeTree(levels, tree) {
+        var new_levels = 1
+        Object.assign(new_levels, levels)
+        if (tree.children) {
+            tree.children.forEach(node => {
+                console.log("SIZETREE")
+                console.log(node)
+                ++new_levels
+                console.log("New levels")
+                console.log(new_levels)
+                this.getSizeTree(new_levels, node)
+            })
+        }
+        else {
+            console.log("SIZETREE")
+            console.log("0")
+
+            this.leaves++
+            this.list_levels.push(++levels)
+        }
+        console.log("Lista de niveles")
+        console.log(this.list_levels)
+
+        this.levels = Math.max(...this.list_levels)
+
+        return [this.levels, this.leaves]
+    }
+
+    setSteps(tree) {
+        var levels = 1;
+        var leaves = 0;
+        [levels, leaves] = this.getSizeTree(levels, tree)
+        var disp_height = this.height - this.padding['top'] - this.padding['bottom']
+        var disp_width = this.width - this.padding['right'] - this.padding['left']
+        var step_x: number = 0;
+        var step_y: number = 0;
+        if (leaves > 0) {
+            step_y = disp_width / leaves
+        }
+        else {
+            step_y = disp_width
+        }
+        if (levels > 0) {
+            step_x = disp_height / levels
+        }
+        else {
+            step_x = disp_height
+        }
+
+
+        return [step_x, step_y]
+    }
 
     collapse(d) {
         console.log("Collapse")
@@ -149,17 +163,22 @@ export class TreeGraphComponent extends BaseChartComponent {
     }
 
     data2tree(data) {
+        // hierarchy(data, children)
         var root = hierarchy(data, function(d) { return d.children; });
-        root.x0 = this.height / 2
-        root.y0 = 0
+        root.x0 = this.padding.left
+        root.y0 = this.height / 2
         console.log("Root hierarchy")
         console.log(root)
+        var name = root.data.name
+        root.name = name
         root.children.forEach(d => this.collapse(d))
         return root
     }
 
 
     getRadius(kind, radius: number, depth: number) {
+        console.log("Kind")
+        console.log(kind)
         if (kind in this.kinds) {
             if (kind == 'simple') {
                 return radius
@@ -173,11 +192,14 @@ export class TreeGraphComponent extends BaseChartComponent {
                 }
             }
         }
+        else {
+            return this.default_radius
+        }
     }
 
     // get position 0  and 1
 
-    getPositionList(source: Node, final: Node) {
+    getPositionList(source: NodeD3, final: NodeD3) {
         var p0: Position = {
             x: source.x,
             y: source.y
@@ -196,16 +218,18 @@ export class TreeGraphComponent extends BaseChartComponent {
         // select transition movement duration by css id
         var container = select(".node #" + node.id)
 
+        var source = node.getSource()
+
         // check children groups
-        if (node.children) {
-            node._children = node.children;
-            node.children = null;
+        if (source.children) {
+            source._children = source.children;
+            source.children = null;
         } else {
-            node.children = node._children;
-            node._children = null;
+            source.children = source._children;
+            source._children = null;
         }
         node.switchOpen()
-        this.draw_update(node);
+        this.draw_update(source);
         // set transitio movement
         container.transition().duration(this.duration)
         if (node.children) {
@@ -239,7 +263,8 @@ export class TreeGraphComponent extends BaseChartComponent {
 
 
     update(): void {
-        super.update()
+        super.update();
+        [this.step_x, this.step_y] = this.setSteps(this.data);
         this.draw_tree();
         this.setColors();
     }
@@ -259,7 +284,7 @@ export class TreeGraphComponent extends BaseChartComponent {
         console.log(this.dims)
 
         this.tree_graph = tree()
-            .size([this.dims.width, this.dims.height]);
+            .size([this.dims.width * .8, this.dims.height * 0.8]);
 
 
         // define tree data:
@@ -279,66 +304,102 @@ export class TreeGraphComponent extends BaseChartComponent {
         console.log("Source ok")
         console.log(source)
 
+        source.id = this.node_idm(this.idn)
+
         this.draw_update(source)
+
+        console.log("Size SVG")
+        console.log([this.width, this.height])
+    }
+
+    addNode2List(source, element) {
+        var step = this.step
+        var idm = this.node_idm(this.idn)
+        var node = new NodeD3(idm)
+        node.setSource(element)
+        node.setRadius(this.getRadius(this.kind, this.radius, element.depth))
+        console.log(node)
+        var text_position: Position = {
+            x: element.children || element._children ?
+                -(this.text_position[0]) : this.text_position[1],
+            y: this.text_position[1]
+        }
+        node.setTextPosition(text_position)
+        node.setNodeName(element.data.name)
+        node.setStyle(element._children ? "lightsteelblue" : "#fff")
+        node.setDepth(element.depth)
+        node.setHeight(element.height)
+        node.setTextAnchor(
+            element.children || element._children ? 'end' : 'start')
+        //position
+        console.log("Leaves:levels")
+        console.log(this.leaves, this.levels)
+        var node_position: Position = {
+            x: this.padding.right + this.step_x * element.depth,
+            y: this.height / 10 + this.step_y
+        }
+        console.log("Node Position:")
+        console.log(node.id)
+        console.log(node_position)
+        node.setNodePosition(node_position)
+        //transform
+        node.setTransform("translate(" + source.y0 + "," + source.x0 + ")")
+        node.switchOpen()
+        this.nodes.push(node)
+        return node
+    }
+
+    makeid(n: number) {
+        var text = "";
+        var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+        for (var i = 0; i < n; i++)
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+        return text;
+    }
+
+    node_idm(n: number) {
+        var idm = this.makeid(n)
+        while (this.node_id_list.has(idm)) {
+            idm = this.makeid(n)
+        }
+        return idm
     }
 
     draw_update(source) {
 
         // update parent component chart
 
-        var i = 0;
-
         // generate nodes
 
         // decendants return an array
 
         console.log("Datawork")
+        console.log(source)
         console.log(source.descendants())
+
+        // extract the source node and children in an array
+        var descendants = source.descendants()
 
         console.log("QUe paso?")
 
-        source.descendants().forEach(
+        descendants.forEach(
             element => {
                 console.log("Element")
                 console.log(element)
-                var step = this.step
-                var node = new Node(element.id)
-                node.setRadius(this.getRadius(this.kind, this.radius, element.depth))
-                console.log(node)
-                var text_position: Position = {
-                    x: element.children || element._children ?
-                        -(this.text_position[0]) : this.text_position[1],
-                    y: this.text_position[1]
+                var node = this.addNode2List(source, element)
+                if (this.node_id_list) {
+                    var p0p1 = this.getPositionList(source, element)
+                    var link_id = `${source.id}-${node.id}`
+                    var link = new Link(link_id, p0p1)
+                    this.links.push(link)
+                    console.log("Setup ok nodes and links")
+                    console.log(this.nodes)
+                    console.log(this.links)
                 }
-                node.setTextPosition(text_position)
-                node.setNodeName(element.data.name)
-                node.setStyle(element._children ? "lightsteelblue" : "#fff")
-                node.setDepth(element.depth)
-                node.setHeight(element.height)
-                node.setTextAnchor(
-                    element.children || element._children ? 'end' : 'start')
-                //position
-                var node_position: Position = {
-                    x: element.x,
-                    y: element.depth * step
-                }
-                node.setNodePosition(node_position)
-                //transform
-                node.setChildren(element)
-                node.setTransform("translate(" + source.y0 + "," + source.x0 + ")")
-                node.switchOpen()
-                this.nodes.push(node)
-                var p0p1 = this.getPositionList(source, element)
-                var link_id = "${source.id}-${node.id}"
-                var link = new Link(link_id, p0p1)
-                this.links.push(link)
-                console.log("Setup ok nodes and links")
-                console.log(this.nodes)
-                console.log(this.links)
             })
         console.log("Drawing tree")
-
-
         this.draw = true
 
     }
@@ -353,6 +414,29 @@ export class TreeGraphComponent extends BaseChartComponent {
 
     setColors(): void {
         this.colors = new ColorHelper(this.scheme, 'ordinal', this.domain, this.customColors);
+    }
+
+    range(a, b) {
+        var result = []
+        for (var i = a; i <= b; i++) {
+            result.push(i)
+        }
+        return result
+    }
+
+    nlist(n) {
+        var a, b
+        if (n % 2 == 0) {
+            a = -n / 2
+            b = n - 1
+        }
+        else {
+            var limit = Math.floor(n / 2)
+            a = -limit
+            b = limit
+        }
+
+        return this.range(a, b)
     }
 
 }

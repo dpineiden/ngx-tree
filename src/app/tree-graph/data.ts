@@ -4,7 +4,10 @@ var tree_example = {
             'children':
             [
                 {
-                    'children': ['g'],
+                    'children': [{
+                        'name': 'g',
+                        'children': []
+                    }],
                     'name': 'f'
                 },
                 {
