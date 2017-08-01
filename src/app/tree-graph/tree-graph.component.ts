@@ -94,56 +94,41 @@ export class TreeGraphComponent extends BaseChartComponent {
 
     list_levels = []
 
-    getSizeTree(levels, tree) {
-        var new_levels = 1
-        Object.assign(new_levels, levels)
-        if (tree.children) {
-            tree.children.forEach(node => {
-                console.log("SIZETREE")
-                console.log(node)
-                ++new_levels
-                console.log("New levels")
-                console.log(new_levels)
-                this.getSizeTree(new_levels, node)
-            })
-        }
-        else {
-            console.log("SIZETREE")
-            console.log("0")
-
-            this.leaves++
-            this.list_levels.push(++levels)
-        }
-        console.log("Lista de niveles")
-        console.log(this.list_levels)
-
-        this.levels = Math.max(...this.list_levels)
+    getSizeTree(tree) {
+        this.leaves = tree.leaves().length
+        this.levels = tree.height
 
         return [this.levels, this.leaves]
     }
 
     setSteps(tree) {
         var levels = 1;
-        var leaves = 0;
-        [levels, leaves] = this.getSizeTree(levels, tree)
+        var leaves = 1;
+        [levels, leaves] = this.getSizeTree(tree)
+        console.log("Size on setteps")
+        console.log([levels, leaves])
+        console.log("[w,h]")
+        console.log([this.width, this.height])
         var disp_height = this.height - this.padding['top'] - this.padding['bottom']
         var disp_width = this.width - this.padding['right'] - this.padding['left']
         var step_x: number = 0;
         var step_y: number = 0;
         if (leaves > 0) {
-            step_y = disp_width / leaves
+            step_y = disp_height / leaves
         }
         else {
-            step_y = disp_width
+            step_y = disp_height
         }
         if (levels > 0) {
-            step_x = disp_height / levels
+            step_x = disp_width / levels
         }
         else {
-            step_x = disp_height
+            step_x = disp_width
+
         }
 
-
+        console.log("Steps obtained")
+        console.log([step_x, step_y])
         return [step_x, step_y]
     }
 
@@ -165,8 +150,8 @@ export class TreeGraphComponent extends BaseChartComponent {
     data2tree(data) {
         // hierarchy(data, children)
         var root = hierarchy(data, function(d) { return d.children; });
-        root.x0 = this.padding.left
-        root.y0 = this.height / 2
+        //root.x0 = this.padding.left
+        //root.y0 = this.height / 2
         console.log("Root hierarchy")
         console.log(root)
         var name = root.data.name
@@ -235,12 +220,12 @@ export class TreeGraphComponent extends BaseChartComponent {
         if (node.children) {
             node.children.forEach(ch_node => {
                 node.setTransform(
-                    "translate(" + ch_node.y + "," + ch_node.x + ")"
+                    "translate(" + ch_node.x + "," + ch_node.y + ")"
                 )
             })
         } else {
             node.setTransform(
-                "translate(" + node.prev_y + "," + node.prev_x + ")"
+                "translate(" + node.prev_x + "," + node.prev_y + ")"
             )
             node.setRadius(1e-6)
             node.setStyle(1e-6)
@@ -264,7 +249,6 @@ export class TreeGraphComponent extends BaseChartComponent {
 
     update(): void {
         super.update();
-        [this.step_x, this.step_y] = this.setSteps(this.data);
         this.draw_tree();
         this.setColors();
     }
@@ -272,6 +256,9 @@ export class TreeGraphComponent extends BaseChartComponent {
     draw_tree() {
         console.log("Selecting svg")
         this.svg = select('svg')
+
+        this.width = 1000
+        this.height = 800
 
         this.dims = calculateViewDimensions({
             width: this.width,
@@ -292,6 +279,8 @@ export class TreeGraphComponent extends BaseChartComponent {
         console.log("Tree graph init")
         console.log(this.tree_graph)
 
+        // added x0 and y0 
+
         var root = this.data2tree(this.data)
 
         console.log("Parse root to tree graph")
@@ -304,18 +293,31 @@ export class TreeGraphComponent extends BaseChartComponent {
         console.log("Source ok")
         console.log(source)
 
+
+        var a, b
+
+        [a, b] = this.setSteps(source)
+
+        source.block_start = this.padding.top
+        source.block_before = 0//this.padding.top
+
+        console.log("Steps defined")
+        this.step_x = a
+        this.step_y = b
+        console.log([this.step_x, this.step_y])
+
         source.id = this.node_idm(this.idn)
 
         this.draw_update(source)
 
-        console.log("Size SVG")
-        console.log([this.width, this.height])
+
     }
 
     addNode2List(source, element) {
         var step = this.step
         var idm = this.node_idm(this.idn)
         var node = new NodeD3(idm)
+        var nleaves = element.leaves().length
         node.setSource(element)
         node.setRadius(this.getRadius(this.kind, this.radius, element.depth))
         console.log(node)
@@ -334,16 +336,28 @@ export class TreeGraphComponent extends BaseChartComponent {
         //position
         console.log("Leaves:levels")
         console.log(this.leaves, this.levels)
+        var ns = source.leaves().length
+        var nr = ns - element.leaves().length
+
+        console.log("block start")
+        console.log(element.block_start)
+        console.log("this.step_y")
+        console.log(this.step_y)
+        console.log("leaves")
+        console.log(element.leaves().length)
+
         var node_position: Position = {
             x: this.padding.right + this.step_x * element.depth,
-            y: this.height / 10 + this.step_y
+            y: element.block_start + this.step_y * element.leaves().length / 2
         }
         console.log("Node Position:")
         console.log(node.id)
         console.log(node_position)
+        console.log("Block")
+        console.log(element.block_start)
         node.setNodePosition(node_position)
         //transform
-        node.setTransform("translate(" + source.y0 + "," + source.x0 + ")")
+        //node.setTransform("translate(" + source.x0 + "," + source.y0 + ")")
         node.switchOpen()
         this.nodes.push(node)
         return node
@@ -375,12 +389,39 @@ export class TreeGraphComponent extends BaseChartComponent {
 
         // decendants return an array
 
+        var i = 0
+        var block_start = source.block_start
+        var block_before = source.block_before
+
         console.log("Datawork")
         console.log(source)
         console.log(source.descendants())
 
         // extract the source node and children in an array
         var descendants = source.descendants()
+
+        descendants.slice(1, descendants.length).forEach(element => {
+
+            // reference to parent block
+
+            element.block_start = block_start // where start to positionate the blocks
+
+
+            // reference to first brother on list positionated
+
+            element.block_before = block_before
+            block_before = block_before + element.leaves().length * this.step_y
+
+            if (i == 0) {
+                block_start = block_start + block_before
+            }
+            else {
+                block_start = block_before
+            }
+
+            element.position = ++i;
+
+        })
 
         console.log("QUe paso?")
 
@@ -389,6 +430,10 @@ export class TreeGraphComponent extends BaseChartComponent {
                 console.log("Element")
                 console.log(element)
                 var node = this.addNode2List(source, element)
+                console.log("Source")
+                console.log(source)
+                console.log("Node")
+                console.log(node)
                 if (this.node_id_list) {
                     var p0p1 = this.getPositionList(source, element)
                     var link_id = `${source.id}-${node.id}`
