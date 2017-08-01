@@ -60,6 +60,7 @@ export class NodeD3 implements NodeInterface {
             x: -1.1,
             y: 0.36,
         }
+        //Object.assign(this.source, { x: 0, y: 0 })
     }
 
     setRadius(value: number) {
@@ -71,6 +72,12 @@ export class NodeD3 implements NodeInterface {
     setNodePosition(p: Position) {
         this.x = p.x
         this.y = p.y
+        Object.assign(this.source,
+            {
+                x: p.x,
+                y: p.y
+            }
+        )
     }
 
     setTextPosition(p: Position) {

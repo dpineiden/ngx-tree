@@ -185,6 +185,10 @@ export class TreeGraphComponent extends BaseChartComponent {
     // get position 0  and 1
 
     getPositionList(source: NodeD3, final: NodeD3) {
+        console.log("Source")
+        console.log(source)
+        console.log("Final")
+        console.log(final)
         var p0: Position = {
             x: source.x,
             y: source.y
@@ -315,7 +319,14 @@ export class TreeGraphComponent extends BaseChartComponent {
 
     addNode2List(source, element) {
         var step = this.step
-        var idm = this.node_idm(this.idn)
+        var idm: string
+        if (!element.id) {
+            idm = this.node_idm(this.idn)
+        }
+        else {
+            idm = element.id
+        }
+
         var node = new NodeD3(idm)
         var nleaves = element.leaves().length
         node.setSource(element)
@@ -434,8 +445,10 @@ export class TreeGraphComponent extends BaseChartComponent {
                 console.log(source)
                 console.log("Node")
                 console.log(node)
-                if (this.node_id_list) {
+                if (!(source == element)) {
                     var p0p1 = this.getPositionList(source, element)
+                    console.log("Position P0 and P1")
+                    console.log(p0p1)
                     var link_id = `${source.id}-${node.id}`
                     var link = new Link(link_id, p0p1)
                     this.links.push(link)
