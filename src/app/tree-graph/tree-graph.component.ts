@@ -214,7 +214,9 @@ export class TreeGraphComponent extends BaseChartComponent {
     // Toggle children on click.
     onNodeClick(node) {
         // select transition movement duration by css id
-        var container = select(".node #" + node.id)
+        // var container = select(".node #" + node.id)
+        console.log("Node click")
+        console.log(node)
 
         var source = node.getSource()
 
@@ -229,17 +231,18 @@ export class TreeGraphComponent extends BaseChartComponent {
         node.switchOpen()
         this.draw_update(source);
         // set transitio movement
-        container.transition().duration(this.duration)
-        if (node.children) {
-            node.children.forEach(ch_node => {
-                node.setTransform(
-                    "translate(" + ch_node.x + "," + ch_node.y + ")"
-                )
+        //container.transition().duration(this.duration)
+        if (source.children) {
+            source.children.forEach(ch_node => {
+                //source.setTransform(
+                //    "translate(" + ch_node.x + "," + ch_node.y + ")"
+                //)
+                console.log("ch_node")
             })
         } else {
-            node.setTransform(
-                "translate(" + node.prev_x + "," + node.prev_y + ")"
-            )
+            //node.setTransform(
+            //    "translate(" + node.prev_x + "," + node.prev_y + ")"
+            //)
             node.setRadius(1e-6)
             node.setStyle(1e-6)
         }
@@ -369,7 +372,7 @@ export class TreeGraphComponent extends BaseChartComponent {
 
         var node_position: Position = {
             x: this.padding.right + this.step_x * element.depth,
-            y: element.block_start + this.step_y * element.nleaves / 2
+            y: element.block_before + this.step_y * element.nleaves / 2
         }
         console.log("Node Position:")
         console.log(node.id)
@@ -421,7 +424,7 @@ export class TreeGraphComponent extends BaseChartComponent {
         // extract the source node and children in an array
         var descendants = source.descendants()
 
-        descendants.slice(1, descendants.length).forEach(element => {
+        descendants.slice(1, descendants.length + 1).forEach(element => {
 
             // reference to parent block
 
@@ -441,6 +444,9 @@ export class TreeGraphComponent extends BaseChartComponent {
             }
 
             element.position = ++i;
+
+            console.log("Defined blocks")
+            console.log(element)
 
         })
 
