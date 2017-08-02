@@ -139,6 +139,7 @@ export class TreeGraphComponent extends BaseChartComponent {
             if (d.children.length > 0) {
                 console.log("Inside collapse")
                 d._children = d.children
+                d.nleaves = d.leaves().length
                 d._children.forEach(d => this.collapse(d))
                 d.children = null
             }
@@ -156,6 +157,7 @@ export class TreeGraphComponent extends BaseChartComponent {
         console.log(root)
         var name = root.data.name
         root.name = name
+        root.nleaves = root.leaves().length
         root.children.forEach(d => this.collapse(d))
         return root
     }
@@ -305,6 +307,7 @@ export class TreeGraphComponent extends BaseChartComponent {
         source.block_start = this.padding.top
         source.block_before = 0//this.padding.top
 
+
         console.log("Steps defined")
         this.step_x = a
         this.step_y = b
@@ -347,19 +350,19 @@ export class TreeGraphComponent extends BaseChartComponent {
         //position
         console.log("Leaves:levels")
         console.log(this.leaves, this.levels)
-        var ns = source.leaves().length
-        var nr = ns - element.leaves().length
+        var ns = source.nleaves
+        var nr = ns - element.nleaves
 
         console.log("block start")
         console.log(element.block_start)
         console.log("this.step_y")
         console.log(this.step_y)
         console.log("leaves")
-        console.log(element.leaves().length)
+        console.log(element.nleaves)
 
         var node_position: Position = {
             x: this.padding.right + this.step_x * element.depth,
-            y: element.block_start + this.step_y * element.leaves().length / 2
+            y: element.block_start + this.step_y * element.nleaves / 2
         }
         console.log("Node Position:")
         console.log(node.id)
