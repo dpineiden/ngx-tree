@@ -74,7 +74,7 @@ export class TreeGraphComponent extends BaseChartComponent {
     kind: string = 'simple';
     step = 120;
     duration = 750;
-    text_position = [-1.1, 0.36]
+    text_position = [-10, 20]
     width = 1200;
     height = 800;
     draw: boolean = false;

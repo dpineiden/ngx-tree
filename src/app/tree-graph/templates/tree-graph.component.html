@@ -20,8 +20,8 @@
       <text class="text"
         [attr.position]="relative"
         [attr.text-anchor]="node.text.anchor_node"
-        [attr.x]="node.text.x"
-        [attr.y]="node.text.y"
+        [attr.x]="node.x+node.text.x"
+        [attr.y]="node.y+node.text.y"
         [attr.style]="node.text.style">{{node.name}}</text>
     </svg:g>
     </svg:g>
