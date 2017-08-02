@@ -95,7 +95,7 @@ export class TreeGraphComponent extends BaseChartComponent {
     list_levels = []
 
     getSizeTree(tree) {
-        this.leaves = tree.leaves().length
+        this.leaves = tree.nleaves
         this.levels = tree.height
 
         return [this.levels, this.leaves]
@@ -139,10 +139,17 @@ export class TreeGraphComponent extends BaseChartComponent {
             if (d.children.length > 0) {
                 console.log("Inside collapse")
                 d._children = d.children
-                d.nleaves = d.leaves().length
+                if (d.leaves()) {
+                    d.nleaves = d.leaves().length
+                }
+                else {
+                    d.nleaves = 1
+                }
                 d._children.forEach(d => this.collapse(d))
                 d.children = null
             }
+        } else {
+            d.nleaves = 1
         }
         console.log("D collapsed")
         console.log(d)
@@ -424,7 +431,7 @@ export class TreeGraphComponent extends BaseChartComponent {
             // reference to first brother on list positionated
 
             element.block_before = block_before
-            block_before = block_before + element.leaves().length * this.step_y
+            block_before = block_before + element.nleaves * this.step_y
 
             if (i == 0) {
                 block_start = block_start + block_before
