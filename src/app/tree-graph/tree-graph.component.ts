@@ -243,6 +243,8 @@ export class TreeGraphComponent extends BaseChartComponent {
         else {
             this.draw_update(source);
         }
+        console.log("Control Nodes")
+        console.log(this.nodes)
 
         // set transitio movement
         //container.transition().duration(this.duration)
@@ -257,8 +259,8 @@ export class TreeGraphComponent extends BaseChartComponent {
             //node.setTransform(
             //    "translate(" + node.prev_x + "," + node.prev_y + ")"
             //)
-            node.setRadius(1e-6)
-            node.setStyle(1e-6)
+            //node.setRadius(1e-6)
+            //node.setStyle(1e-6)
         }
     }
 
@@ -360,62 +362,69 @@ export class TreeGraphComponent extends BaseChartComponent {
         else {
             idm = element.id
         }
-        element.id = idm
+
 
         // register the children id under source id
 
         var sid = source.id
 
         if (sid !== idm) {
+            element.id = idm
             this.node_id_children[sid].push(idm)
+            this.node_id_children[idm] = []
         }
+
         // create new array with key element id
-        this.node_id_children[idm] = []
 
-        var node = new NodeD3(idm)
-        var nleaves = element.leaves().length
-        node.setSource(element)
-        node.setRadius(this.getRadius(this.kind, this.radius, element.depth))
-        console.log(node)
-        var text_position: Position = {
-            x: element.children || element._children ?
-                -(this.text_position[0]) : this.text_position[1],
-            y: this.text_position[1]
+        if (!this.nodes.find(element => { return element.id == idm })) {
+            var node = new NodeD3(idm)
+            var nleaves = element.leaves().length
+            node.setSource(element)
+            node.setRadius(this.getRadius(this.kind, this.radius, element.depth))
+            console.log(node)
+            var text_position: Position = {
+                x: element.children || element._children ?
+                    -(this.text_position[0]) : this.text_position[1],
+                y: this.text_position[1]
+            }
+            node.setTextPosition(text_position)
+            node.setNodeName(element.data.name)
+            node.setStyle(element._children ? "lightsteelblue" : "#fff")
+            node.setDepth(element.depth)
+            node.setHeight(element.height)
+            node.setTextAnchor(
+                element.children || element._children ? 'end' : 'start')
+            //position
+            console.log("Leaves:levels")
+            console.log(this.leaves, this.levels)
+            var ns = source.nleaves
+            var nr = ns - element.nleaves
+
+            console.log("block start")
+            console.log(element.block_start)
+            console.log("this.step_y")
+            console.log(this.step_y)
+            console.log("leaves")
+            console.log(element.nleaves)
+
+            var node_position: Position = {
+                x: this.padding.right + this.step_x * element.depth,
+                y: element.block_before + this.step_y * element.nleaves / 2
+            }
+            console.log("Node Position:")
+            console.log(node.id)
+            console.log(node_position)
+            console.log("Block")
+            console.log(element.block_start)
+            node.setNodePosition(node_position)
+            //transform
+            //node.setTransform("translate(" + source.x0 + "," + source.y0 + ")")
+            //node.switchOpen()
+            this.nodes.push(node)
         }
-        node.setTextPosition(text_position)
-        node.setNodeName(element.data.name)
-        node.setStyle(element._children ? "lightsteelblue" : "#fff")
-        node.setDepth(element.depth)
-        node.setHeight(element.height)
-        node.setTextAnchor(
-            element.children || element._children ? 'end' : 'start')
-        //position
-        console.log("Leaves:levels")
-        console.log(this.leaves, this.levels)
-        var ns = source.nleaves
-        var nr = ns - element.nleaves
-
-        console.log("block start")
-        console.log(element.block_start)
-        console.log("this.step_y")
-        console.log(this.step_y)
-        console.log("leaves")
-        console.log(element.nleaves)
-
-        var node_position: Position = {
-            x: this.padding.right + this.step_x * element.depth,
-            y: element.block_before + this.step_y * element.nleaves / 2
+        else {
+            var node = this.nodes.find(element => { return element.id == sid })
         }
-        console.log("Node Position:")
-        console.log(node.id)
-        console.log(node_position)
-        console.log("Block")
-        console.log(element.block_start)
-        node.setNodePosition(node_position)
-        //transform
-        //node.setTransform("translate(" + source.x0 + "," + source.y0 + ")")
-        //node.switchOpen()
-        this.nodes.push(node)
         return node
     }
 
@@ -517,45 +526,66 @@ export class TreeGraphComponent extends BaseChartComponent {
         console.log("Child list to contract:")
         console.log(child_list)
         console.log(this.nodes)
-
-        child_list.forEach(node_id => {
-            if (this.node_id_children[node_id]) {
+        console.log(child_list.length)
+        if (child_list) {
+            child_list.forEach(node_id => {
                 // there are children, so call again
-                this.contractNodes(node_id)
-            }
-            else {
-                // drop element from node
-                var node_drop = this.nodes.find(
-                    element => {
-                        return element.id === node_id
-                    }
-                )
+                console.log("Contracting node")
+                console.log(node_id)
+                var new_child_list = this.node_id_children[node_id]
+                console.log("New child list")
+                console.log(new_child_list)
+                if (new_child_list.length > 0) {
+                    this.contractNodes(node_id)
+                }
+                else {
+                    console.log("Check if empty")
+                    console.log(new_child_list.length == 0)
+                    console.log(new_child_list)
+                    console.log("Dropping NODE and LINK betwen source and children")
+                    // drop element from node
+                    var node_drop = this.nodes.find(
+                        element => {
+                            return element.id === source_id
+                        }
+                    )
 
-                this.nodes.splice(
-                    this.nodes.indexOf(node_drop), 1
-                )
+                    console.log("Previous Nodes")
+                    console.log(this.nodes)
 
-                // drop link elements from source to child
-                var link_id = source_id + "-" + node_id
+                    this.nodes.splice(
+                        this.nodes.indexOf(node_drop), 1
+                    )
 
-                var link_drop = this.links.find(
-                    element => {
-                        return element.id === link_id
-                    }
-                )
+                    console.log("After splice node from  Nodes")
+                    console.log(this.nodes)
 
-                this.links.splice(
-                    this.links.indexOf(link_drop), 1
-                )
+                    // drop link elements from source to child
+                    var link_id = source_id + "-" + node_id
 
-                // clear from list
+                    console.log("Link to drop")
+                    console.log(link_id)
 
-                child_list.splice(
-                    child_list.indexOf(node_id), 1)
+                    var link_drop = this.links.find(
+                        element => {
+                            return element.id === link_id
+                        }
+                    )
 
+                    console.log(link_drop)
 
-            }
-        })
+                    this.links.splice(
+                        this.links.indexOf(link_drop), 1
+                    )
+
+                    // clear from list
+
+                    this.node_id_children[node_id].splice(
+                        child_list.indexOf(node_id), 1)
+                }
+
+            })
+        }
 
         console.log("Nodes and links list")
         console.log(this.nodes)
