@@ -6,32 +6,32 @@
   [data]="data">
   <svg:g *ngIf="draw">
     <svg:g id="paths" *ngFor="let link of links">
-      <path class="link"
+      <svg:path class="link"
         [attr.id]="link.id"
         [attr.d]="link.d"
         [attr.stroke]="link.stroke"
         [attr.fill]="link.fill"
-        (click)="onLinkClick(link)"> </path>
+        (click)="onLinkClick(link)"> </svg:path>
     </svg:g>
 
     <svg:g id="nodes" *ngFor="let node of nodes">
    <svg:g class="node"
      [attr.id]="styleNodeId(node)"
      [attr.transform]="transform" (click)="onNodeClick(node)">
-     <circle class="figure"
+     <svg:circle class="figure"
        [attr.r]="node.radius"
        [attr.cursor]="node.cursor"
        [attr.style]="node.styles"
        [attr.transform]="node.transform"
        [attr.cx]="node.x"
        [attr.cy]="node.y">
-      </circle>
-      <text class="text"
+      </svg:circle>
+      <svg:text class="text"
         [attr.position]="relative"
         [attr.text-anchor]="node.text.anchor_node"
         [attr.x]="node.x+node.text.x"
         [attr.y]="node.y+node.text.y"
-        [attr.style]="node.text.style">{{node.name}}</text>
+        [attr.style]="node.text.style">{{node.name}}</svg:text>
     </svg:g>
     </svg:g>
   </svg:g>

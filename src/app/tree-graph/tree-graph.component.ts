@@ -590,7 +590,6 @@ export class TreeGraphComponent extends BaseChartComponent {
         console.log("Nodes and links list")
         console.log(this.nodes)
         console.log(this.links)
-
     }
 
 
