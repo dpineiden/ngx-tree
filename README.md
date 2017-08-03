@@ -37,6 +37,6 @@ The following example is made by the tree graph component:
 
 * expand
 * contract
-* layer position: nodes over links
-* path highlight
+* layer position: nodes over links [DONE]
 * transitions (animations)
+* path highlight
