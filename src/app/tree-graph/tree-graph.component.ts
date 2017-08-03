@@ -514,6 +514,10 @@ export class TreeGraphComponent extends BaseChartComponent {
 
         var child_list = this.node_id_children[source_id]
 
+        console.log("Child list to contract:")
+        console.log(child_list)
+        console.log(this.nodes)
+
         child_list.forEach(node_id => {
             if (this.node_id_children[node_id]) {
                 // there are children, so call again
@@ -552,6 +556,11 @@ export class TreeGraphComponent extends BaseChartComponent {
 
             }
         })
+
+        console.log("Nodes and links list")
+        console.log(this.nodes)
+        console.log(this.links)
+
     }
 
 
