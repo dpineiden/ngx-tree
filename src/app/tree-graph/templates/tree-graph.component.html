@@ -5,7 +5,16 @@
   [activeEntries]="activeEntries"
   [data]="data">
   <svg:g *ngIf="draw">
- <svg:g id="nodes" *ngFor="let node of nodes">
+    <svg:g id="paths" *ngFor="let link of links">
+      <path class="link"
+        [attr.id]="link.id"
+        [attr.d]="link.d"
+        [attr.stroke]="link.stroke"
+        [attr.fill]="link.fill"
+        (click)="onLinkClick(link)"> </path>
+    </svg:g>
+
+    <svg:g id="nodes" *ngFor="let node of nodes">
    <svg:g class="node"
      [attr.id]="styleNodeId(node)"
      [attr.transform]="transform" (click)="onNodeClick(node)">
@@ -24,14 +33,6 @@
         [attr.y]="node.y+node.text.y"
         [attr.style]="node.text.style">{{node.name}}</text>
     </svg:g>
-    </svg:g>
-    <svg:g id="paths" *ngFor="let link of links">
-      <path class="link"
-        [attr.id]="link.id"
-        [attr.d]="link.d"
-        [attr.stroke]="link.stroke"
-        [attr.fill]="link.fill"
-        (click)="onLinkClick(link)"> </path>
     </svg:g>
   </svg:g>
 

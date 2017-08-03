@@ -32,3 +32,11 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 The following example is made by the tree graph component:
 
 ![Tree Graph](./tree_graph.png)
+
+## To do
+
+* expand
+* contract
+* layer position: nodes over links
+* path highlight
+* transitions (animations)
