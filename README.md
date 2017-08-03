@@ -35,8 +35,8 @@ The following example is made by the tree graph component:
 
 ## To do
 
-* expand
-* contract
+* expand [DONE] [NATURAL ACTION]
+* contract 
 * layer position: nodes over links [DONE]
 * transitions (animations)
 * path highlight

@@ -82,6 +82,7 @@ export class TreeGraphComponent extends BaseChartComponent {
     i = 0;
     idn = 4;
     node_id_list = new Map();
+    node_id_children = {};
     // lolo = new Node();//https://developer.mozilla.org/es/docs/Web/API/Node
     // Obtain a list from a to b
 
@@ -217,6 +218,10 @@ export class TreeGraphComponent extends BaseChartComponent {
         // var container = select(".node #" + node.id)
         console.log("Node click")
         console.log(node)
+        console.log("Object of children")
+        console.log(this.node_id_children)
+        console.log("children\'s id array")
+        console.log(this.node_id_children[node.id])
 
         var source = node.getSource()
 
@@ -224,12 +229,21 @@ export class TreeGraphComponent extends BaseChartComponent {
         if (source.children) {
             source._children = source.children;
             source.children = null;
+            node.open = false
         } else {
             source.children = source._children;
             source._children = null;
+            node.open = true
         }
-        node.switchOpen()
-        this.draw_update(source);
+
+        if (!node.open) {
+            this.contractNodes(node.id)
+
+        }
+        else {
+            this.draw_update(source);
+        }
+
         // set transitio movement
         //container.transition().duration(this.duration)
         if (source.children) {
@@ -323,7 +337,14 @@ export class TreeGraphComponent extends BaseChartComponent {
         this.step_y = b
         console.log([this.step_x, this.step_y])
 
-        source.id = this.node_idm(this.idn)
+        var idm: string
+
+        idm = this.node_idm(this.idn)
+
+        source.id = idm
+        source.open = true
+
+        this.node_id_children[idm] = []
 
         this.draw_update(source)
 
@@ -339,6 +360,17 @@ export class TreeGraphComponent extends BaseChartComponent {
         else {
             idm = element.id
         }
+        element.id = idm
+
+        // register the children id under source id
+
+        var sid = source.id
+
+        if (sid !== idm) {
+            this.node_id_children[sid].push(idm)
+        }
+        // create new array with key element id
+        this.node_id_children[idm] = []
 
         var node = new NodeD3(idm)
         var nleaves = element.leaves().length
@@ -382,7 +414,7 @@ export class TreeGraphComponent extends BaseChartComponent {
         node.setNodePosition(node_position)
         //transform
         //node.setTransform("translate(" + source.x0 + "," + source.y0 + ")")
-        node.switchOpen()
+        //node.switchOpen()
         this.nodes.push(node)
         return node
     }
@@ -417,6 +449,7 @@ export class TreeGraphComponent extends BaseChartComponent {
         var block_start = source.block_start
         var block_before = source.block_before
 
+
         console.log("Datawork")
         console.log(source)
         console.log(source.descendants())
@@ -425,29 +458,20 @@ export class TreeGraphComponent extends BaseChartComponent {
         var descendants = source.descendants()
 
         descendants.slice(1, descendants.length + 1).forEach(element => {
-
             // reference to parent block
-
             element.block_start = block_start // where start to positionate the blocks
-
-
-            // reference to first brother on list positionated
-
+            // reference to first brother on list position
             element.block_before = block_before
             block_before = block_before + element.nleaves * this.step_y
-
             if (i == 0) {
                 block_start = block_start + block_before
             }
             else {
                 block_start = block_before
             }
-
             element.position = ++i;
-
             console.log("Defined blocks")
             console.log(element)
-
         })
 
         console.log("QUe paso?")
@@ -473,10 +497,63 @@ export class TreeGraphComponent extends BaseChartComponent {
                     console.log(this.links)
                 }
             })
+        // look in this.nodes the node
+        // get the id from this node
+        // all the children and drop from array
+
+
         console.log("Drawing tree")
         this.draw = true
 
     }
+
+    contractNodes(source_id) {
+
+        console.log("Contract nodes from:")
+        console.log(source_id)
+
+        var child_list = this.node_id_children[source_id]
+
+        child_list.forEach(node_id => {
+            if (this.node_id_children[node_id]) {
+                // there are children, so call again
+                this.contractNodes(node_id)
+            }
+            else {
+                // drop element from node
+                var node_drop = this.nodes.find(
+                    element => {
+                        return element.id === node_id
+                    }
+                )
+
+                this.nodes.splice(
+                    this.nodes.indexOf(node_drop), 1
+                )
+
+                // drop link elements from source to child
+                var link_id = source_id + "-" + node_id
+
+                var link_drop = this.links.find(
+                    element => {
+                        return element.id === link_id
+                    }
+                )
+
+                this.links.splice(
+                    this.links.indexOf(link_drop), 1
+                )
+
+                // clear from list
+
+                child_list.splice(
+                    child_list.indexOf(node_id), 1)
+
+
+            }
+        })
+    }
+
 
     getDomain(): any[] {
         return this.results.map(d => d.name);
