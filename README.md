@@ -29,6 +29,6 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 
 ## An example
 
-The following example is made by the tree gprah component:
+The following example is made by the tree graph component:
 
 ![Tree Graph](./tree_graph.png)
